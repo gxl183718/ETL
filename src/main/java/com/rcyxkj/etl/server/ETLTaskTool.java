@@ -1,10 +1,13 @@
 package com.rcyxkj.etl.server;
 
+import com.alibaba.fastjson.JSON;
 import com.rcyxkj.etl.configs.TSMConf;
 import com.rcyxkj.etl.entity.TaskEntity;
 import com.rcyxkj.etl.error.ScheduleException;
 import com.rcyxkj.etl.tool.LogTool;
 import com.rcyxkj.etl.tool.RedisUtils;
+
+import java.util.List;
 
 public class ETLTaskTool {
 
@@ -18,12 +21,15 @@ public class ETLTaskTool {
         ETLTaskAction action = ActionFactory.getTaskAction();
         switch (task.getState()) {
             case TaskAction.ADD:
+                LogTool.logInfo(2, task.getM_id() + " status is add");
                 action.doAdd(task);
                 break;
             case TaskAction.DELETE:
+                LogTool.logInfo(2, task.getM_id() + " status is delete");
                 action.doDelete(task);
                 break;
             case TaskAction.UPDATE:
+                LogTool.logInfo(2, task.getM_id() + " status is update");
                 action.doUpdate(task);
                 break;
             default:

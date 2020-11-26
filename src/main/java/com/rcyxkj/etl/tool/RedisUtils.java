@@ -29,8 +29,14 @@ public class RedisUtils {
      * @param task
      */
     public static void taskStore(TaskEntity task) {
-        String taskId = task.getTask_id();
-        redisPool.jedis(jedis -> jedis.hset(TSMConf.allTask, taskId, JSON.toJSONString(task)));
+        String mId = task.getM_id();
+        redisPool.jedis(jedis -> jedis.hset(TSMConf.allTask, mId, JSON.toJSONString(task)));
+    }
+    public static List<String> taskInRedis() {
+        return redisPool.jedis(jedis -> jedis.hvals(TSMConf.allTask));
+    }
+    public static void taskInRedisDelete(String m_id) {
+        redisPool.jedis(jedis -> jedis.hdel(TSMConf.allTask, m_id));
     }
 
     /**
@@ -59,6 +65,9 @@ public class RedisUtils {
     public static List<String> taskActions(String taskId){
         return redisPool.jedis(jedis -> jedis.lrange(TSMConf.taskHandle + taskId, 0, -1));
     }
+    public static Long taskActionNums(String taskId){
+        return redisPool.jedis(jedis -> jedis.llen(TSMConf.taskHandle + taskId));
+    }
 
     public static Set<String> getActiveNodesByHb() {
         // should add LivenessProbe
@@ -66,5 +75,4 @@ public class RedisUtils {
                 .map(key -> key.split("-")[0])
                 .collect(Collectors.toSet());
     }
-
 }

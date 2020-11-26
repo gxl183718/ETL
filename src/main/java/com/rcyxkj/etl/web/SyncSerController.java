@@ -17,7 +17,7 @@ public class SyncSerController {
             sb.append("<tr>");
             sb.append("<td>" + node + "</td>");
             sb.append("<td><font color=\"black\">running</font> </td>");
-            sb.append("<td><a href=\"http://localhost:" + TSMConf.httpPort + "/getNodeTasks?node=" +
+            sb.append("<td><a href=\"http://localhost:" + TSMConf.httpPort + "/api/node/" +
                     node + "\">节点任务状态(" + RedisUtils.nodeTasksNum(node)  +")</a></td>");
             sb.append("</tr>");
         }
@@ -25,11 +25,11 @@ public class SyncSerController {
             sb.append("<tr>");
             sb.append("<td>" + node + "</td>");
             sb.append("<td><font color=\"red\">running</font> </td>");
-            sb.append("<td><a href=\"http://localhost:" + TSMConf.httpPort + "/getNodeTasks?node=" +
+            sb.append("<td><a href=\"http://localhost:" + TSMConf.httpPort + "/api/node/" +
                     node + "\">节点任务状态(" + RedisUtils.nodeTasksNum(node)  +")</a></td>");
             sb.append("</tr>");
         }
-        LogTool.logInfo(1, sb.toString());
+        LogTool.logInfo(2, sb.toString());
         String page =
                 "<HTML>" +
                 "  <HEAD>" +
@@ -64,11 +64,11 @@ public class SyncSerController {
                 color = "red";
             }
             sb.append("<td><font color=\""+color+"\">"+entry.getValue()+"</font> </td>");
-            sb.append("<td><a href=\"http://localhost:" + TSMConf.httpPort + "/getTaskActions/" +
-                    node + "\">操作详情(" + RedisUtils.nodeTasksNum(node)  +")</a></td>");
+            sb.append("<td><a href=\"http://localhost:" + TSMConf.httpPort + "/api/getTaskActions/" +
+                    entry.getKey() + "\">操作详情(" + RedisUtils.taskActionNums(entry.getKey())  +")</a></td>");
             sb.append("</tr>");
         }
-        LogTool.logInfo(1, sb.toString());
+        LogTool.logInfo(2, sb.toString());
         String page =
                 "<HTML>" +
                         "  <HEAD>" +

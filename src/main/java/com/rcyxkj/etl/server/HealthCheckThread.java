@@ -3,6 +3,7 @@ package com.rcyxkj.etl.server;
 import static com.rcyxkj.etl.tool.RedisUtils.redisPool;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.alibaba.fastjson.JSON;
 import com.rcyxkj.etl.configs.TSMConf;
@@ -13,12 +14,19 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 
 /**
- * 1.检查交换任务节点服务健康状况，节点down掉后迁移节点上的任务至健康节点
+ * 1.check etl server nodes，when one node has down migrate tasks on this node to healthy node.;
  */
 public class HealthCheckThread extends TimerTask {
     public static Set<String> serverNodes = new HashSet<>();
     public static Set<String> nodesActive = new HashSet<>();
     public static Set<String> nodesMightDown = new HashSet<>();
+    public static Map<String, AtomicInteger> nodeDownTimeHash = new HashMap<>();
+    private RabbitMQConsumer rabbitMQConsumer;
+
+    public HealthCheckThread(RabbitMQConsumer rabbitMQConsumer){
+        this.rabbitMQConsumer = rabbitMQConsumer;
+        LogTool.logInfo(1, "health check thread start.");
+    }
 
     @Override
     public void run() {
@@ -26,7 +34,14 @@ public class HealthCheckThread extends TimerTask {
         redisPool.jedis(jedis -> {
             synchronized (serverNodes){
                 serverNodes.clear();
-                serverNodes.addAll(jedis.smembers(TSMConf.serverNodes));
+                Set<String> ss = jedis.smembers(TSMConf.serverNodes);
+                for (String s : ss) {
+                    if (s.endsWith("-process")){
+                        serverNodes.add(s.split("-")[0]);
+                    }else {
+                        serverNodes.add(s);
+                    }
+                }
             }
             for (String serverNode : serverNodes) {
                 if (!jedis.exists(serverNode + TSMConf.heartbeatsPre)) {
@@ -34,15 +49,29 @@ public class HealthCheckThread extends TimerTask {
                     nodesMightDown.add(serverNode);
                 } else {
                     nodesActive.add(serverNode);
+                    AtomicInteger a = nodeDownTimeHash.get(serverNode);
+                    if (a != null){
+                        a.set(0);
+                    }
                 }
             }
-            // 2.判断might down节点挂掉的时间，down掉一定时间没有恢复迁移这个节点的任务
+            synchronized (rabbitMQConsumer){
+                if (nodesActive.size()>0)
+                    rabbitMQConsumer.notifyAll();
+            }
+            // 2. at first do not migrate, until over time
             if (nodesMightDown.size() > 0) {
                 if (nodesActive.size() > 0) {
                     for (String downNode : nodesMightDown) {
-                        jedis.hincrBy(TSMConf.nodeDownTime, downNode, 10);
-                        long downTime = Long.parseLong(jedis.hget(TSMConf.nodeDownTime, downNode));
-                        if (downTime >= TSMConf.migrateDownTime) {
+                        AtomicInteger downTime = nodeDownTimeHash.get(downNode);
+                        if (downTime == null){
+                            nodeDownTimeHash.put(downNode, new AtomicInteger(1));
+                        }else {
+                            downTime.incrementAndGet();
+                        }
+//                        jedis.hincrBy(TSMConf.nodeDownTime, downNode, 10);
+//                        long downTime = Long.parseLong(jedis.hget(TSMConf.nodeDownTime, downNode));
+                        if (downTime.get()*10 >= TSMConf.migrateDownTime) {
                              doMigrate(downNode);
                         }
                     }
@@ -50,7 +79,7 @@ public class HealthCheckThread extends TimerTask {
                     LogTool.logInfo(1, "all servers down!");
                 }
             } else {
-                // 不需要迁移
+                // do anything
             }
             return null;
         });
@@ -61,6 +90,7 @@ public class HealthCheckThread extends TimerTask {
      * @param downNode
      */
     private void doMigrate(String downNode){
+        LogTool.logInfo(1, "node " + downNode + " is down , do migrate.");
         Set<String> tasksId = redisPool.jedis(jedis -> {
            return jedis.smembers(TSMConf.nodeTasksSetPre + downNode);
         });

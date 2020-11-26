@@ -2,6 +2,7 @@ package com.rcyxkj.etl.server;
 
 import com.rcyxkj.etl.configs.TSMConf;
 import com.rcyxkj.etl.tool.LogTool;
+import com.rcyxkj.etl.tool.RedisUtils;
 import com.rcyxkj.etl.web.HttpServer;
 import com.zzq.dolls.config.LoadConfig;
 
@@ -22,19 +23,22 @@ public class TSMServer {
             InetAddress[] a = InetAddress.getAllByName(InetAddress.getLocalHost().getHostName());
             for (InetAddress ia : a) {
                 if (ia.getHostAddress().contains(TSMConf.outsideIp)) {
-                    System.out.println("[1] Got node IP " + ia.getHostAddress() + " by hint " + TSMConf.outsideIp);
+                    LogTool.logInfo(1, "[1] Got node IP " + ia.getHostAddress() + " by hint " + TSMConf.outsideIp);
                     outsideIp = ia.getHostAddress();
                     isSetOutsideIP = true;
+                }else {
                 }
             }
+            if (!isSetOutsideIP)
+                LogTool.logInfo(1, "[1] Have not get node ip by hint " + TSMConf.outsideIp);
             if (TSMConf.nodeName == null) {
                 if (isSetOutsideIP) {
                     TSMConf.nodeName = outsideIp;
                 } else {
-                    TSMConf.nodeName = InetAddress.getLocalHost().getHostName();
+                    TSMConf.nodeName = InetAddress.getLocalHost().getHostName() + System.nanoTime();
                 }
+                LogTool.logInfo(1, "[2] Not set node name in config file, get name '"+ TSMConf.nodeName +"' automatically");
             }
-            LogTool.logInfo(1, "server running , node name is " + TSMConf.nodeName);
             // 3.主备模式，leader 选举线程，所有调度任务只在master节点执行
             Timer timer = new Timer();
             ServerLeader serverLeader = new ServerLeader();
@@ -45,9 +49,17 @@ public class TSMServer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        new Thread(() -> {
-
-        }).start();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                LogTool.logInfo(1, "process exiting");
+                if (RabbitMQConsumer.isWaiting.get()){
+                    LogTool.logInfo(1, "there are msgs were consumed but no active etl servers, load for next handling.");
+                    RedisUtils.taskStore(RabbitMQConsumer.msg);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }));
 
     }
 }

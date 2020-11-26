@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * 交换服务调度，异步接口 通过redis实现
+ * schedule thread,implement through redis
  */
 public class AsyncETLTaskAction implements ETLTaskAction {
 
@@ -26,10 +26,10 @@ public class AsyncETLTaskAction implements ETLTaskAction {
         String mId = task.getM_id();
         String node = selectNode();
         if (node == null) {
-            throw new ScheduleException("select swap server is error!");
+            throw new ScheduleException("select node error, node=null.");
         }
         redisPool.jedis(jedis -> {
-            // 任务分配到节点
+            // Assign to selected node
             Pipeline pipeline = jedis.pipelined();
             pipeline.lpush(TSMConf.nodeTasksListPre + node, JSON.toJSONString(task));
             pipeline.sadd(TSMConf.nodeTasksSetPre + node, taskId);
@@ -40,7 +40,7 @@ public class AsyncETLTaskAction implements ETLTaskAction {
             return null;
         });
         LogTool.logInfo(1, "task(" + task.getM_id() + ") -> " + node);
-//        async(mId);
+        async(mId);
         return false;
     }
 
@@ -69,7 +69,7 @@ public class AsyncETLTaskAction implements ETLTaskAction {
             }
             return null;
         });
-//        async(mId);
+        async(mId);
 
         return false;
     }
@@ -98,7 +98,7 @@ public class AsyncETLTaskAction implements ETLTaskAction {
             }
             return null;
         });
-//        async(mId);
+        async(mId);
 
         return false;
     }
