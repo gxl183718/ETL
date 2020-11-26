@@ -2,7 +2,7 @@ plugins {
     id 'java'
 }
 
-group 'cn.ac.iie'
+group 'com.rcyxkj.etl'
 version 'v2.0'
 archivesBaseName = 'tsm'
 sourceCompatibility = 1.8
@@ -27,12 +27,10 @@ dependencies {
 }
 jar {
     from {
-        //添加依懒到打包文件
         configurations.runtime.collect { zipTree(it) }
     }
-
     manifest {
-        attributes 'Main-Class': 'server.DataAccessServer'
+        attributes 'Main-Class': 'com.rcyxkj.etl.server.TSMServer'
         //attributes "Class-Path": configurations.compile.collect { "lib/${it.name}" }.join(' ')
     }
 }

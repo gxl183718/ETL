@@ -1,32 +1,31 @@
 #1.redis配置
 redisUrl:
-  - 192.168.1.1:26379
-  - 192.168.1.2:26379
+  - 172.20.20.212:6379
 redisMaster: mymaster
-redisMode: 1
-redisDb: 0
-redisPass: 111111
+redisMode: 0
+redisDb: 6
+redisPass: Ntdh@123
 #2.rabbitmq配置
 rabbitMqUsername: admin
 rabbitMqPassword: Ntdh@123
 rabbitMqHostName: 172.20.20.221
 rabbitMqPort: 5672
 rabbitMqQueueName: DataExchange.TaskQueue
-#3.redis数据字段配置
-  #从队列消费的所有任务，hash格式：key->$allTasks,filed->$taskId,value->$messageFromRabbitMq
+  #3.redis数据字段配置
+#从队列消费的所有任务，hash格式：key->$allTasks,filed->$taskId,value->$messageFromRabbitMq
 allTasks: task-all
-  #根据outsideIp获取本机ip,如‘10.136.’则查找包含‘10.135.’的ip为本机ip
-outsideIp: 192.
-  #expire实现服务leader选举，string格式：key->$serverLeader，value->$serverName,周期性设置过期时间为$leaderExpire
+#根据outsideIp获取本机ip,如‘10.136.’则查找包含‘10.135.’的ip为本机ip
+outsideIp: 172.20
+#expire实现服务leader选举，string格式：key->$serverLeader，value->$serverName,周期性设置过期时间为$leaderExpire
 serverLeader: ser.leader
-  #leader选举周期，即每过多久时间重新设置一次leader的过期时间
+#leader选举周期，即每过多久时间重新设置一次leader的过期时间
 leaderPeriod: 10
-  #leader过期时间，默认serverLeader过期时间设置为(leaderperiod+5)s
+#leader过期时间，默认serverLeader过期时间设置为(leaderperiod+5)s
 leaderExpire: 15
   #节点名，默认本机ip由$outsideIp设定，没有对应的ip则用hostname作为nodeName，此选项可以手动指定nodeName
-#nodeName: node1
-  #http服务端口
-httpPort: 20099
+  #nodeName: node1
+#http服务端口
+httpPort: 20098
 #节点现有任务 set类型
 nodeTasksSetPre: taskList-
 #节点任务队列 list类型
@@ -34,15 +33,16 @@ nodeTasksListPre: taskin-
 #节点列表 set类型
 serverNodes: nodelist
 
+#交换任务节点心跳
+heartbeatsPre: -process
 
-heartbeatsPre: hb.nodes.
 #节点挂掉的时长
-nodeDownTime: down.time.nodes
-#节点挂掉多久需要迁移节点之上的任务
-migrateDownTime: 60
+nodeDownTime: down-time-ns
+#节点挂掉多久需要迁移节点之上的任务,默认600秒
+migrateDownTime: 600
 #taskId-node映射
 taskIdToNode: taskIdToNode
-#节点心跳key
-taskHandle: taskHandle.
+#审计
+taskHandle: task.handle.
 #日志级别
 logLevel: 2
