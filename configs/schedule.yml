@@ -2,7 +2,7 @@
 redisUrl:
   - 172.20.20.212:6379
 redisMaster: mymaster
-redisMode: 0
+redisMode: 2
 redisDb: 6
 redisPass: Ntdh@123
 #2.rabbitmq配置

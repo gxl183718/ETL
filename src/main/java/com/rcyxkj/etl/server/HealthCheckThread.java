@@ -66,6 +66,7 @@ public class HealthCheckThread extends TimerTask {
                         AtomicInteger downTime = nodeDownTimeHash.get(downNode);
                         if (downTime == null){
                             nodeDownTimeHash.put(downNode, new AtomicInteger(1));
+                            downTime = nodeDownTimeHash.get(downNode);
                         }else {
                             downTime.incrementAndGet();
                         }
@@ -101,15 +102,20 @@ public class HealthCheckThread extends TimerTask {
             String newNode = selectNode();
             redisPool.jedis(jedis -> {
                 // 任务分配到节点
-                Pipeline pipeline = jedis.pipelined();
-                //                pipeline.lpush(TSMConf.nodeTasksPre + node, JSON.toJSONString(task));
-
-                pipeline.hdel(TSMConf.taskIdToNode, taskId, downNode);
-                pipeline.srem(TSMConf.nodeTasksSetPre + downNode, taskId);
-
-                pipeline.hset(TSMConf.taskIdToNode, taskId, newNode);
-                pipeline.sadd(TSMConf.nodeTasksSetPre + newNode, taskId);
-                pipeline.lpush(TSMConf.nodeTasksListPre + newNode, JSON.toJSONString(taskEntity) );
+//                Pipeline pipeline = jedis.pipelined();
+//                //                pipeline.lpush(TSMConf.nodeTasksPre + node, JSON.toJSONString(task));
+//                pipeline.hdel(TSMConf.taskIdToNode, taskId, downNode);
+//                pipeline.srem(TSMConf.nodeTasksSetPre + downNode, taskId);
+//
+//                pipeline.hset(TSMConf.taskIdToNode, taskId, newNode);
+//                pipeline.sadd(TSMConf.nodeTasksSetPre + newNode, taskId);
+//                pipeline.lpush(TSMConf.nodeTasksListPre + newNode, JSON.toJSONString(taskEntity) );
+//                pipeline.sync();
+                jedis.hdel(TSMConf.taskIdToNode, taskId, downNode);
+                jedis.srem(TSMConf.nodeTasksSetPre + downNode, taskId);
+                jedis.hset(TSMConf.taskIdToNode, taskId, newNode);
+                jedis.sadd(TSMConf.nodeTasksSetPre + newNode, taskId);
+                jedis.lpush(TSMConf.nodeTasksListPre + newNode, JSON.toJSONString(taskEntity) );
                 return null;
             });
         }

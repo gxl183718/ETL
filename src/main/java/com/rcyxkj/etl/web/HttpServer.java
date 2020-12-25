@@ -33,7 +33,6 @@ public class HttpServer {
             path("getTaskActions", () -> {
                 get("/:taskId", SyncSerController::getTaskActions);
             });
-
             get("health", ctx -> {
                 ctx.result("ok");
              });
@@ -41,5 +40,10 @@ public class HttpServer {
 
         app.exception(EofException.class, (a, b)->{});
         app.start(TSMConf.httpPort);
+    }
+
+    public static void main(String[] args) {
+        String s = "/";
+        System.out.println(s.substring(0, s.length()-1));
     }
 }

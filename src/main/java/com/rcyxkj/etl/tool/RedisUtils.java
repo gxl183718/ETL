@@ -10,17 +10,25 @@ import com.alibaba.fastjson.JSON;
 import com.rcyxkj.etl.configs.TSMConf;
 import com.rcyxkj.etl.entity.TaskEntity;
 import com.zzq.dolls.redis.RedisPool;
+import com.zzq.dolls.redis.mini.MiniPool;
+import com.zzq.dolls.redis.module.RedisModule;
 
 public class RedisUtils {
 
-    public final static RedisPool redisPool;
-
+    public final static MiniPool redisPool;
     static {
-        redisPool = RedisPool.builder().urls(TSMConf.redisUrls)
-                .masterName(TSMConf.redisMaster)
-                .password(TSMConf.redisPass)
+//        redisPool = RedisPool.builder().urls(TSMConf.redisUrls)
+//                .masterName(TSMConf.redisMaster)
+//                .password(TSMConf.redisPass)
+//                .redisMode(TSMConf.redisMode)
+//                .db(TSMConf.redisDb).build();
+        redisPool = RedisPool.builder()
+                .urls(TSMConf.redisUrls)
                 .redisMode(TSMConf.redisMode)
-                .db(TSMConf.redisDb).build();
+                .password(TSMConf.redisPass)
+                .masterName(TSMConf.redisMaster)
+                .db(TSMConf.redisDb)
+                .build().mini();
     }
 
     /**

@@ -52,7 +52,6 @@ public class RabbitMQConsumer implements Runnable {
                                 ex.printStackTrace();
                             }
                         }
-
                     }
                 }
             });

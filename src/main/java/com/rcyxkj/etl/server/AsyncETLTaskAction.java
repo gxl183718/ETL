@@ -30,13 +30,18 @@ public class AsyncETLTaskAction implements ETLTaskAction {
         }
         redisPool.jedis(jedis -> {
             // Assign to selected node
-            Pipeline pipeline = jedis.pipelined();
-            pipeline.lpush(TSMConf.nodeTasksListPre + node, JSON.toJSONString(task));
-            pipeline.sadd(TSMConf.nodeTasksSetPre + node, taskId);
-            pipeline.hset(TSMConf.taskIdToNode, taskId, node);
-            pipeline.rpush(TSMConf.taskHandle + taskId, LogTool.getTime() + "action '" +
+//            Pipeline pipeline = jedis.pipelined();
+//            pipeline.lpush(TSMConf.nodeTasksListPre + node, JSON.toJSONString(task));
+//            pipeline.sadd(TSMConf.nodeTasksSetPre + node, taskId);
+//            pipeline.hset(TSMConf.taskIdToNode, taskId, node);
+//            pipeline.rpush(TSMConf.taskHandle + taskId, LogTool.getTime() + "action '" +
+//                    ETLTaskTool.TaskAction.ADD + "'," + task.toString());//任务操作审计
+//            pipeline.sync();
+            jedis.lpush(TSMConf.nodeTasksListPre + node, JSON.toJSONString(task));
+            jedis.sadd(TSMConf.nodeTasksSetPre + node, taskId);
+            jedis.hset(TSMConf.taskIdToNode, taskId, node);
+            jedis.rpush(TSMConf.taskHandle + taskId, LogTool.getTime() + "action '" +
                     ETLTaskTool.TaskAction.ADD + "'," + task.toString());//任务操作审计
-            pipeline.sync();
             return null;
         });
         LogTool.logInfo(1, "task(" + task.getM_id() + ") -> " + node);
@@ -56,12 +61,15 @@ public class AsyncETLTaskAction implements ETLTaskAction {
                     LogTool.logInfo(1, "taskId=" + taskId + ", all server nodes have no this task, "
                             + "action 'update' do not pull to server.");
                 } else {
-                    Pipeline pipeline = jedis.pipelined();
-                    pipeline.lpush(TSMConf.nodeTasksListPre + node, JSON.toJSONString(task));//推送到node的操作
-                    pipeline.rpush(TSMConf.taskHandle + taskId, LogTool.getTime() + "action '" +
-                            ETLTaskTool.TaskAction.ADD + "'," + task.toString());//任务操作审计
-                    pipeline.sync();
-                    pipeline.close();
+//                    Pipeline pipeline = jedis.pipelined();
+//                    pipeline.lpush(TSMConf.nodeTasksListPre + node, JSON.toJSONString(task));//推送到node的操作
+//                    pipeline.rpush(TSMConf.taskHandle + taskId, LogTool.getTime() + "action '" +
+//                            ETLTaskTool.TaskAction.ADD + "'," + task.toString());//任务操作审计
+//                    pipeline.sync();
+//                    pipeline.close();
+                    jedis.lpush(TSMConf.nodeTasksListPre + node, JSON.toJSONString(task));//推送到node的操作
+                    jedis.rpush(TSMConf.taskHandle + taskId, LogTool.getTime() + "action '" +
+                    ETLTaskTool.TaskAction.ADD + "'," + task.toString());//任务操作审计
                 }
                 LogTool.logInfo(1, "task(" + task.getM_id() + ") -> " + node);
             } catch (Exception e) {
@@ -85,12 +93,15 @@ public class AsyncETLTaskAction implements ETLTaskAction {
                     LogTool.logInfo(1, "taskId=" + taskId + ", all server nodes have no this task, "
                             + "action 'delete' do not pull to server.");
                 } else {
-                    Pipeline pipeline = jedis.pipelined();
-                    pipeline.lpush(TSMConf.nodeTasksListPre + node, JSON.toJSONString(task));
-                    pipeline.hdel(TSMConf.taskIdToNode, taskId, node);
-                    pipeline.srem(TSMConf.nodeTasksSetPre + node, taskId);
-                    pipeline.sync();
-                    pipeline.close();
+//                    Pipeline pipeline = jedis.pipelined();
+//                    pipeline.lpush(TSMConf.nodeTasksListPre + node, JSON.toJSONString(task));
+//                    pipeline.hdel(TSMConf.taskIdToNode, taskId, node);
+//                    pipeline.srem(TSMConf.nodeTasksSetPre + node, taskId);
+//                    pipeline.sync();
+//                    pipeline.close();
+                    jedis.lpush(TSMConf.nodeTasksListPre + node, JSON.toJSONString(task));
+                    jedis.hdel(TSMConf.taskIdToNode, taskId, node);
+                    jedis.srem(TSMConf.nodeTasksSetPre + node, taskId);
                 }
                 LogTool.logInfo(1, "task(" + task.getM_id() + ") -> " + node);
             } catch (Exception e) {

@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'com.rcyxkj.etl'
-version 'v2.0'
+version 'v1.2.1'
 archivesBaseName = 'tsm'
 sourceCompatibility = 1.8
 
